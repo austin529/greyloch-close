@@ -49,9 +49,9 @@
 		// Cloudflare Access / Entra ID. Override these with the real values.
 		// TEAM_DOMAIN must include the scheme and no trailing slash.
 		"TEAM_DOMAIN": "https://weathered-sun-7f9b.cloudflareaccess.com",
-		"POLICY_AUD": "86bf7466-dfd1-4719-80ed-fd090aa25095",
+		"POLICY_AUD": "b4a412132b6eb4ef25cabe740bcb8356fcf33d5a5dbf23ae6aa5ad34c4bd4d07",
 		// Public URL of the deployed app (used in notification links).
-		"APP_URL": "https://greyloch-close.pages.dev"
+		"APP_URL": "https://greyloch-close.austin-0e2.workers.dev"
 		// TEAMS_WEBHOOK_URL is a SECRET — set it with:
 		//   npx wrangler secret put TEAMS_WEBHOOK_URL
 		// (and add it to .dev.vars for local testing). When unset, notifications
