@@ -1,14 +1,15 @@
 -- Seed data, reconciled from the Monday "TEMPLATE Reoccurring Task List" board.
 --
--- USERS: the month-end close team. Emails must match exactly what Cloudflare
--- Access / Entra ID sends. Ids are referenced by the templates below, so keep
--- this order.
+-- USERS: the month-end close team. Emails MUST match what Entra/Access sends —
+-- these are the Microsoft 365 identities (@greylochllc.onmicrosoft.com), NOT the
+-- @greyloch.com Google addresses. Ids are referenced by the templates below, so
+-- keep this order.
 --   1 Austin (admin)  2 Christina  3 Sydney  4 Sharon (reviewer)
 INSERT INTO users (email, name, system_role) VALUES
-  ('austin@greyloch.com',    'Austin Hall',    'admin'),
-  ('christina@greyloch.com', 'Christina Cole', 'staff'),
-  ('sydney@greyloch.com',    'Sydney Peel',    'staff'),
-  ('sharon@greyloch.com',    'Sharon',         'staff');
+  ('austin@greylochllc.onmicrosoft.com',    'Austin Hall',    'admin'),
+  ('christina@greylochllc.onmicrosoft.com', 'Christina Cole', 'staff'),
+  ('sydney@greylochllc.onmicrosoft.com',    'Sydney Peel',    'staff'),
+  ('sharon@greylochllc.onmicrosoft.com',    'Sharon Urrutia', 'staff');
 
 -- TASK TEMPLATES: the recurring month-end checklist mirrored from Monday.
 --   category   = NULL (the board has no categories; the app orders by day)
