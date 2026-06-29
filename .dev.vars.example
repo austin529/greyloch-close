@@ -1,0 +1,11 @@
+# Copy to .dev.vars for local development (`.dev.vars` is gitignored and is
+# ONLY loaded by `wrangler dev` — it is never deployed).
+#
+# AUTH_DEV_BYPASS skips Cloudflare Access JWT validation locally so you can run
+# the app without sitting behind Access. It MUST never be set in production
+# (production has no .dev.vars and the var defaults to off).
+AUTH_DEV_BYPASS = "true"
+
+# Which seeded user you act as locally. Override per-request with the
+# `X-Dev-Email` header to test other roles.
+DEV_EMAIL = "austin@greyloch.com"

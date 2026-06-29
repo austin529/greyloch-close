@@ -1,0 +1,49 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "greyloch-close",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-29",
+  "compatibility_flags": ["nodejs_compat"],
+  // Builds the React SPA into ./dist before bundling/deploying the Worker, so a
+  // plain `wrangler deploy` (incl. Cloudflare's Git auto-deploy) ships the
+  // frontend too — no separate build step needed in the CI config.
+  "build": {
+    "command": "npm run build"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // API requests run the Worker first; everything else is served as a
+    // static asset (SPA fallback to index.html).
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "greyloch-close",
+      // Replace with the id from `npm run db:create` before deploying.
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Daily overdue digest to Teams (15:00 UTC ~ 9am Mountain). Adjust as needed.
+  "triggers": {
+    "crons": ["0 15 * * *"]
+  },
+  "vars": {
+    // Cloudflare Access / Entra ID. Override these with the real values.
+    // TEAM_DOMAIN must include the scheme and no trailing slash.
+    "TEAM_DOMAIN": "https://REPLACE_TEAM.cloudflareaccess.com",
+    "POLICY_AUD": "REPLACE_WITH_ACCESS_APPLICATION_AUD_TAG",
+    // Public URL of the deployed app (used in notification links).
+    "APP_URL": "https://REPLACE_WITH_APP_HOSTNAME"
+    // TEAMS_WEBHOOK_URL is a SECRET — set it with:
+    //   npx wrangler secret put TEAMS_WEBHOOK_URL
+    // (and add it to .dev.vars for local testing). When unset, notifications
+    // are simply skipped.
+  }
+}
