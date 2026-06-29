@@ -175,7 +175,7 @@ export function Dashboard({
           <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <div className="mb-3 flex items-center justify-between text-sm">
               <span className="font-medium text-slate-700">
-                Progress · target close {fmtDate(period.target_close_date)}
+                Progress
               </span>
               {overdueCount > 0 && (
                 <span className="text-xs font-medium text-rose-600">{overdueCount} overdue</span>
@@ -373,7 +373,6 @@ function OpenPeriodModal({
   onCreated: (id: number) => void;
 }) {
   const [period, setPeriod] = useState(suggestNextPeriod(existing));
-  const [target, setTarget] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -381,10 +380,7 @@ function OpenPeriodModal({
     setBusy(true);
     setError(null);
     try {
-      const created = await api.post<Period>("/periods", {
-        period,
-        target_close_date: target || undefined,
-      });
+      const created = await api.post<Period>("/periods", { period });
       onCreated(created.id);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : String(e));
@@ -397,9 +393,6 @@ function OpenPeriodModal({
       <div className="space-y-3">
         <Field label="Period (YYYY-MM)">
           <input className={inputCls} value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="2026-06" />
-        </Field>
-        <Field label="Target close date (optional)">
-          <input type="date" className={inputCls} value={target} onChange={(e) => setTarget(e.target.value)} />
         </Field>
         <p className="text-xs text-slate-400">
           This spawns a task for every active template, copying its name, category, and default assignees.
