@@ -91,9 +91,18 @@ the app.
 npm run deploy             # vite build && wrangler deploy
 ```
 
-Or connect the GitHub repo in **Workers & Pages → connect to Git** for
-auto-deploy on push to `main` (build command `npm run build`; Cloudflare runs
-`wrangler deploy`). Secrets and the D1 binding persist across deploys.
+### Auto-deploy on push to `main` — pick ONE
+
+- **Cloudflare native (simplest):** **Workers & Pages → Create → Connect to Git**
+  → pick the repo. Cloudflare runs `wrangler deploy` (the build hook in
+  `wrangler.jsonc` builds the SPA). No secrets stored in GitHub.
+- **GitHub Actions:** the included [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+  builds, applies new D1 migrations, and deploys. Add two repo secrets —
+  `CLOUDFLARE_API_TOKEN` (Edit Workers + D1) and `CLOUDFLARE_ACCOUNT_ID`.
+
+Either way, secrets (`TEAMS_WEBHOOK_URL`) and the D1 binding persist across
+deploys. With the native option, run `npm run db:migrate:remote` yourself for
+schema changes; the Actions workflow applies migrations automatically.
 
 ---
 
