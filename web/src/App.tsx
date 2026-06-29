@@ -4,7 +4,7 @@ import { Dashboard } from "./Dashboard";
 import { Templates } from "./Templates";
 import { Users } from "./Users";
 import type { Me, Period, User } from "./types";
-import { cx } from "./ui";
+import { cx, Logo } from "./ui";
 
 type Tab = "close" | "templates" | "users";
 
@@ -55,8 +55,16 @@ export default function App() {
   return (
     <div className="mx-auto flex min-h-full max-w-5xl flex-col px-4 pb-16">
       <header className="flex flex-wrap items-center gap-3 py-5">
-        <div className="mr-2">
-          <h1 className="text-lg font-bold tracking-tight text-slate-900">Greyloch · Month-End Close</h1>
+        <div className="mr-2 flex items-center gap-2.5">
+          <Logo className="h-7 w-auto text-brand" />
+          <h1 className="leading-none">
+            <span className="block font-display text-xl font-semibold uppercase tracking-wide text-ink">
+              Greyloch
+            </span>
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-mute">
+              Month-End Close
+            </span>
+          </h1>
         </div>
         <nav className="flex gap-1 rounded-lg bg-slate-200/60 p-0.5 text-sm">
           <TabBtn active={tab === "close"} onClick={() => setTab("close")}>Close</TabBtn>
@@ -88,7 +96,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
       onClick={onClick}
       className={cx(
         "rounded-md px-3 py-1 font-medium transition",
-        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700",
+        active ? "bg-white text-brand shadow-sm" : "text-slate-500 hover:text-slate-700",
       )}
     >
       {children}

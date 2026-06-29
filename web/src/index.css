@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Greyloch brand palette + type (see brand guide). Exposed as Tailwind theme
+   tokens: bg-brand / text-brand / ring-brand, text-ink / text-ink-soft /
+   text-ink-mute, and the font-display (Oswald) utility. */
+@theme {
+  --color-brand: #009639;
+  --color-brand-600: #007f30;
+  --color-brand-50: #e9f6ee;
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #444343;
+  --color-ink-mute: #868686;
+  --font-display: "Oswald", ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   color-scheme: light;
 }
@@ -12,8 +25,8 @@ body,
 
 body {
   margin: 0;
-  background: #f1f5f9; /* slate-100 */
-  color: #0f172a; /* slate-900 */
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+  background: #f2f3f3;
+  color: #1a1a1a;
+  font-family: "Open Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
 }

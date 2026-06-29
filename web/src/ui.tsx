@@ -5,11 +5,26 @@ export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
 }
 
+/** The Greyloch logo mark (exact vector geometry from the brand guide).
+    Inherits color via currentColor — use text-brand, text-white, etc. */
+export function Logo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 90 45" className={className} fill="currentColor" role="img" aria-label="Greyloch">
+      <rect x="0" y="0" width="20.7" height="45" />
+      <rect x="22.1" y="0.1" width="45.9" height="10.2" />
+      <rect x="69.3" y="0" width="20.6" height="10.4" />
+      <rect x="34.6" y="17.3" width="33.4" height="10.4" />
+      <rect x="69.3" y="17.3" width="20.6" height="27.7" />
+      <rect x="22" y="34.6" width="46" height="10.4" />
+    </svg>
+  );
+}
+
 export const STATUS_META: Record<TaskStatus, { label: string; cls: string }> = {
   not_started: { label: "Not started", cls: "bg-slate-100 text-slate-600 ring-slate-200" },
   in_progress: { label: "In progress", cls: "bg-blue-50 text-blue-700 ring-blue-200" },
   prepared: { label: "Prepared", cls: "bg-amber-50 text-amber-700 ring-amber-200" },
-  reviewed: { label: "Reviewed", cls: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
+  reviewed: { label: "Reviewed", cls: "bg-brand-50 text-brand ring-brand/30" },
   reopened: { label: "Reopened", cls: "bg-rose-50 text-rose-700 ring-rose-200" },
 };
 
@@ -53,7 +68,7 @@ export function Button({ variant = "secondary", className, ...rest }: BtnProps) 
   const base =
     "inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed";
   const variants = {
-    primary: "bg-slate-900 text-white hover:bg-slate-700",
+    primary: "bg-brand text-white hover:bg-brand-600",
     secondary: "bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50",
     danger: "bg-rose-600 text-white hover:bg-rose-500",
     ghost: "text-slate-500 hover:bg-slate-100",
@@ -67,7 +82,7 @@ export function ProgressBar({ done, total }: { done: number; total: number }) {
     <div className="flex items-center gap-2">
       <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-all"
+          className="h-full rounded-full bg-brand transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
