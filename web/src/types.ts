@@ -4,7 +4,7 @@ export type TaskStatus =
   | "not_started"
   | "in_progress"
   | "prepared"
-  | "reviewed"
+  | "completed"
   | "reopened";
 
 export interface Me {

@@ -110,7 +110,7 @@ export function TaskDetail({
           <section className="flex flex-wrap gap-2">
             {perms.canPrepare(me, task) && (
               <Button variant="primary" disabled={busy} onClick={() => run(() => api.post(`/tasks/${task.id}/prepare`))}>
-                Mark prepared
+                {task.requires_review ? "Mark prepared" : "Mark complete"}
               </Button>
             )}
             {perms.canReview(me, task) && (

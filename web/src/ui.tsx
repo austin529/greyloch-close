@@ -20,23 +20,29 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-export const STATUS_META: Record<TaskStatus, { label: string; cls: string }> = {
-  not_started: { label: "Not started", cls: "bg-slate-100 text-slate-600 ring-slate-200" },
-  in_progress: { label: "In progress", cls: "bg-blue-50 text-blue-700 ring-blue-200" },
-  prepared: { label: "Prepared", cls: "bg-amber-50 text-amber-700 ring-amber-200" },
-  reviewed: { label: "Reviewed", cls: "bg-brand-50 text-brand ring-brand/30" },
-  reopened: { label: "Reopened", cls: "bg-rose-50 text-rose-700 ring-rose-200" },
+export const STATUS_META: Record<
+  TaskStatus,
+  { label: string; cls: string; color: string }
+> = {
+  not_started: { label: "Not started", cls: "bg-slate-100 text-slate-600 ring-slate-200", color: "#cbd5e1" },
+  in_progress: { label: "In progress", cls: "bg-blue-50 text-blue-700 ring-blue-200", color: "#3b82f6" },
+  prepared: { label: "Awaiting review", cls: "bg-amber-50 text-amber-700 ring-amber-200", color: "#f59e0b" },
+  completed: { label: "Completed", cls: "bg-brand-50 text-brand ring-brand/30", color: "#009639" },
+  reopened: { label: "Reopened", cls: "bg-rose-50 text-rose-700 ring-rose-200", color: "#f43f5e" },
 };
 
-export function StatusBadge({ status }: { status: TaskStatus }) {
+/** Prominent status pill: colored dot + label, larger than a plain tag. */
+export function StatusBadge({ status, size = "md" }: { status: TaskStatus; size?: "sm" | "md" }) {
   const m = STATUS_META[status];
   return (
     <span
       className={cx(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
+        "inline-flex items-center gap-1.5 rounded-full font-semibold ring-1 ring-inset",
+        size === "md" ? "px-2.5 py-1 text-xs" : "px-2 py-0.5 text-[11px]",
         m.cls,
       )}
     >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: m.color }} />
       {m.label}
     </span>
   );
@@ -50,9 +56,9 @@ export function BlockedBadge() {
   );
 }
 
-/** A task is "done" when reviewed, or prepared on a no-review task. */
+/** A task is "done" when it reaches the terminal completed state. */
 export function isTaskDone(t: Task): boolean {
-  return t.status === "reviewed" || (t.requires_review === 0 && t.status === "prepared");
+  return t.status === "completed";
 }
 
 export function isOverdue(t: Task): boolean {
@@ -127,7 +133,7 @@ export const perms = {
     me.system_role !== "viewer" &&
     (me.system_role === "admin" || t.preparer_id === me.id) &&
     t.status !== "prepared" &&
-    t.status !== "reviewed",
+    t.status !== "completed",
   canReview: (me: Me, t: Task) =>
     me.system_role !== "viewer" &&
     t.requires_review === 1 &&
@@ -137,8 +143,10 @@ export const perms = {
     (me.system_role === "admin" || t.prepared_by !== me.id),
   canReopen: (me: Me, t: Task) =>
     me.system_role !== "viewer" &&
-    (me.system_role === "admin" || t.reviewer_id === me.id) &&
-    (t.status === "prepared" || t.status === "reviewed"),
+    (t.status === "prepared" || t.status === "completed") &&
+    (me.system_role === "admin" ||
+      t.reviewer_id === me.id ||
+      (t.requires_review === 0 && t.preparer_id === me.id)),
 };
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {

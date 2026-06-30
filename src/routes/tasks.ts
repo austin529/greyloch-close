@@ -136,7 +136,9 @@ tasks.patch("/tasks/:id", async (c) => {
   return c.json(full ?? updated);
 });
 
-// not_started / in_progress / reopened -> prepared
+// Preparer marks their work done.
+//   requires_review = 1 -> 'prepared' (awaiting a reviewer sign-off)
+//   requires_review = 0 -> 'completed' (terminal; no review needed)
 tasks.post("/tasks/:id/prepare", async (c) => {
   const user = c.get("user");
   requireWriter(user);
@@ -145,13 +147,15 @@ tasks.post("/tasks/:id/prepare", async (c) => {
   requireOpenPeriod(period);
 
   if (!isAdmin(user) && !isPreparer(user, task)) {
-    forbidden("Only the assigned preparer or an admin can mark this prepared.");
+    forbidden("Only the assigned preparer or an admin can complete this.");
   }
-  if (task.status === "prepared" || task.status === "reviewed") {
+  if (task.status === "prepared" || task.status === "completed") {
     conflict(`Task is already ${task.status}.`);
   }
 
-  await transition(c.env.DB, task, "prepared", {
+  const reviewRequired = task.requires_review === 1;
+  const newStatus = reviewRequired ? "prepared" : "completed";
+  await transition(c.env.DB, task, newStatus, {
     prepared_by: user.id,
     prepared_at: true,
   });
@@ -160,11 +164,11 @@ tasks.post("/tasks/:id/prepare", async (c) => {
     period_id: task.period_id,
     user_id: user.id,
     action: "status_change",
-    detail: `${task.status} -> prepared`,
+    detail: `${task.status} -> ${newStatus}`,
   });
   const full = (await taskWithNames(c.env.DB, id)) as TaskRow;
   // Ready for review -> ping the reviewer.
-  if (task.requires_review === 1 && full?.reviewer_name) {
+  if (reviewRequired && full?.reviewer_name) {
     c.executionCtx.waitUntil(
       notify(c.env, {
         title: "Ready for review",
@@ -202,7 +206,7 @@ tasks.post("/tasks/:id/review", async (c) => {
     conflict("Segregation of duties: reviewer and preparer are the same person.");
   }
 
-  await transition(c.env.DB, task, "reviewed", {
+  await transition(c.env.DB, task, "completed", {
     reviewed_by: user.id,
     reviewed_at: true,
   });
@@ -211,7 +215,7 @@ tasks.post("/tasks/:id/review", async (c) => {
     period_id: task.period_id,
     user_id: user.id,
     action: "status_change",
-    detail: overrideSod ? "prepared -> reviewed (SoD overridden by admin)" : "prepared -> reviewed",
+    detail: overrideSod ? "prepared -> completed (SoD overridden by admin)" : "prepared -> completed",
   });
   const full = (await taskWithNames(c.env.DB, id)) as TaskRow;
   if (full?.prepared_by_name) {
@@ -228,7 +232,7 @@ tasks.post("/tasks/:id/review", async (c) => {
   return c.json(full);
 });
 
-// prepared / reviewed -> reopened (pulls back sign-offs; re-prepare required)
+// prepared / completed -> reopened (pulls back sign-offs; redo required)
 tasks.post("/tasks/:id/reopen", async (c) => {
   const user = c.get("user");
   requireWriter(user);
@@ -236,11 +240,16 @@ tasks.post("/tasks/:id/reopen", async (c) => {
   const { task, period } = await loadTaskAndPeriod(c.env.DB, id);
   requireOpenPeriod(period);
 
-  if (!isAdmin(user) && !isReviewer(user, task)) {
-    forbidden("Only the assigned reviewer or an admin can reopen a task.");
+  // Admin, the reviewer, or (for no-review tasks) the preparer may reopen.
+  const mayReopen =
+    isAdmin(user) ||
+    isReviewer(user, task) ||
+    (task.requires_review === 0 && isPreparer(user, task));
+  if (!mayReopen) {
+    forbidden("Only the reviewer, preparer, or an admin can reopen a task.");
   }
-  if (task.status !== "prepared" && task.status !== "reviewed") {
-    conflict("Only prepared or reviewed tasks can be reopened.");
+  if (task.status !== "prepared" && task.status !== "completed") {
+    conflict("Only prepared or completed tasks can be reopened.");
   }
 
   const body = await readBody<{ reason?: string }>(c);

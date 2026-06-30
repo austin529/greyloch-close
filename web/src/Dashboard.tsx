@@ -13,6 +13,7 @@ import {
   isTaskDone,
   perms,
   ProgressBar,
+  STATUS_META,
   StatusBadge,
 } from "./ui";
 
@@ -292,26 +293,23 @@ function TaskRow({
   onClick: () => void;
 }) {
   const overdue = isOverdue(task);
-  const mine = task.preparer_id === me.id || task.reviewer_id === me.id;
+  // Colored left bar makes the task's state obvious at a glance; blocked wins.
+  const barColor = task.blocked ? "#e11d48" : STATUS_META[task.status].color;
   return (
     <button
       onClick={onClick}
+      style={{ borderLeftColor: barColor }}
       className={cx(
-        "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50",
+        "flex w-full items-center gap-3 border-l-4 px-4 py-3 text-left hover:bg-slate-50",
         !first && "border-t border-slate-100",
       )}
     >
-      <StatusBadge status={task.status} />
+      <span className="w-32 shrink-0">
+        <StatusBadge status={task.status} />
+      </span>
       {task.blocked ? <BlockedBadge /> : null}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-slate-800">
-          {task.name}
-          {mine && (
-            <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
-              MINE
-            </span>
-          )}
-        </div>
+        <div className="truncate text-sm font-medium text-slate-800">{task.name}</div>
         <div className="truncate text-xs text-slate-400">
           {task.preparer_name ?? "unassigned"} → {task.requires_review ? task.reviewer_name ?? "unassigned" : "no review"}
         </div>

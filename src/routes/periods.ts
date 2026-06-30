@@ -21,8 +21,7 @@ periods.get("/periods", async (c) => {
     `SELECT p.*,
             (SELECT COUNT(*) FROM tasks t WHERE t.period_id = p.id) AS task_count,
             (SELECT COUNT(*) FROM tasks t WHERE t.period_id = p.id
-                AND (t.status = 'reviewed'
-                     OR (t.requires_review = 0 AND t.status = 'prepared'))) AS done_count
+                AND t.status = 'completed') AS done_count
        FROM close_periods p
       ORDER BY p.period DESC`,
   ).all();
