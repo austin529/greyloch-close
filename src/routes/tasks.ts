@@ -149,7 +149,7 @@ tasks.post("/tasks/:id/prepare", async (c) => {
   if (!isAdmin(user) && !isPreparer(user, task)) {
     forbidden("Only the assigned preparer or an admin can complete this.");
   }
-  if (task.status === "prepared" || task.status === "completed") {
+  if (task.status === "prepared" || task.status === "completed" || task.status === "reviewed") {
     conflict(`Task is already ${task.status}.`);
   }
 
@@ -248,7 +248,7 @@ tasks.post("/tasks/:id/reopen", async (c) => {
   if (!mayReopen) {
     forbidden("Only the reviewer, preparer, or an admin can reopen a task.");
   }
-  if (task.status !== "prepared" && task.status !== "completed") {
+  if (task.status !== "prepared" && task.status !== "completed" && task.status !== "reviewed") {
     conflict("Only prepared or completed tasks can be reopened.");
   }
 

@@ -43,7 +43,7 @@ async function overdueDigest(env: Env): Promise<void> {
        LEFT JOIN users u ON u.id = t.preparer_id
       WHERE t.due_date IS NOT NULL
         AND t.due_date < ?
-        AND t.status != 'completed'
+        AND t.status NOT IN ('completed','reviewed')
       ORDER BY t.due_date`,
   )
     .bind(today)

@@ -20,20 +20,20 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-export const STATUS_META: Record<
-  TaskStatus,
-  { label: string; cls: string; color: string }
-> = {
+type StatusMeta = { label: string; cls: string; color: string };
+export const STATUS_META: Record<string, StatusMeta> = {
   not_started: { label: "Not started", cls: "bg-slate-100 text-slate-600 ring-slate-200", color: "#cbd5e1" },
   in_progress: { label: "In progress", cls: "bg-blue-50 text-blue-700 ring-blue-200", color: "#3b82f6" },
   prepared: { label: "Awaiting review", cls: "bg-amber-50 text-amber-700 ring-amber-200", color: "#f59e0b" },
   completed: { label: "Completed", cls: "bg-brand-50 text-brand ring-brand/30", color: "#009639" },
+  // Legacy: pre-migration rows may still be 'reviewed'; treat as completed.
+  reviewed: { label: "Completed", cls: "bg-brand-50 text-brand ring-brand/30", color: "#009639" },
   reopened: { label: "Reopened", cls: "bg-rose-50 text-rose-700 ring-rose-200", color: "#f43f5e" },
 };
 
 /** Prominent status pill: colored dot + label, larger than a plain tag. */
 export function StatusBadge({ status, size = "md" }: { status: TaskStatus; size?: "sm" | "md" }) {
-  const m = STATUS_META[status];
+  const m = STATUS_META[status] ?? STATUS_META.not_started;
   return (
     <span
       className={cx(
@@ -56,9 +56,10 @@ export function BlockedBadge() {
   );
 }
 
-/** A task is "done" when it reaches the terminal completed state. */
+/** A task is "done" when it reaches the terminal completed state.
+    ('reviewed' is the legacy pre-migration equivalent.) */
 export function isTaskDone(t: Task): boolean {
-  return t.status === "completed";
+  return t.status === "completed" || t.status === "reviewed";
 }
 
 export function isOverdue(t: Task): boolean {
@@ -133,7 +134,8 @@ export const perms = {
     me.system_role !== "viewer" &&
     (me.system_role === "admin" || t.preparer_id === me.id) &&
     t.status !== "prepared" &&
-    t.status !== "completed",
+    t.status !== "completed" &&
+    t.status !== "reviewed",
   canReview: (me: Me, t: Task) =>
     me.system_role !== "viewer" &&
     t.requires_review === 1 &&
@@ -143,7 +145,7 @@ export const perms = {
     (me.system_role === "admin" || t.prepared_by !== me.id),
   canReopen: (me: Me, t: Task) =>
     me.system_role !== "viewer" &&
-    (t.status === "prepared" || t.status === "completed") &&
+    (t.status === "prepared" || t.status === "completed" || t.status === "reviewed") &&
     (me.system_role === "admin" ||
       t.reviewer_id === me.id ||
       (t.requires_review === 0 && t.preparer_id === me.id)),

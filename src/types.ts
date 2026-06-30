@@ -24,6 +24,7 @@ export type TaskStatus =
   | "in_progress"
   | "prepared"
   | "completed"
+  | "reviewed" // legacy: migrated to 'completed'; kept for tolerance
   | "reopened";
 
 export interface User {
