@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "./api";
+import { ReconcilePanel } from "./ReconcilePanel";
 import type { Activity, Me, Period, Task, User } from "./types";
 import {
   BlockedBadge,
@@ -251,6 +252,9 @@ export function TaskDetail({
               <p className="whitespace-pre-wrap text-sm text-slate-600">{task.notes || "—"}</p>
             )}
           </section>
+
+          {/* statement reconciliation (Advanced Hardware tasks) */}
+          {/(ahs|advanced hardware)/i.test(task.name) && <ReconcilePanel taskId={task.id} />}
 
           {/* activity / comments */}
           <section className="space-y-3">

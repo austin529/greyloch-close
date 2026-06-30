@@ -15,6 +15,11 @@ export interface Env {
   TEAMS_WEBHOOK_URL?: string;
   /** Public app URL, used for links in notifications. */
   APP_URL?: string;
+  /** CData Connect Cloud query endpoint + credentials for QuickBooks reads.
+      Until set, reconciliation parses the statement but skips QBO matching. */
+  CDATA_API_URL?: string;
+  CDATA_USERNAME?: string;
+  CDATA_TOKEN?: string;
 }
 
 export type SystemRole = "admin" | "staff" | "viewer";

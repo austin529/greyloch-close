@@ -3,6 +3,7 @@ import { authMiddleware } from "./auth";
 import { notify } from "./notify";
 import { me } from "./routes/me";
 import { periods } from "./routes/periods";
+import { reconcileRoutes } from "./routes/reconcile";
 import { tasks } from "./routes/tasks";
 import { templates } from "./routes/templates";
 import { users } from "./routes/users";
@@ -19,6 +20,7 @@ api.use("*", authMiddleware);
 api.route("/", me);
 api.route("/", periods);
 api.route("/", tasks);
+api.route("/", reconcileRoutes);
 api.route("/", templates);
 api.route("/", users);
 

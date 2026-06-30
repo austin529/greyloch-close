@@ -38,9 +38,21 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T;
 }
 
+async function upload<T>(path: string, formData: FormData): Promise<T> {
+  const headers: Record<string, string> = {}; // let the browser set multipart boundary
+  const dev = getDevEmail();
+  if (dev) headers["X-Dev-Email"] = dev;
+  const res = await fetch(`/api${path}`, { method: "POST", headers, body: formData });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new ApiError(res.status, data?.error || `Request failed (${res.status})`);
+  return data as T;
+}
+
 export const api = {
   get: <T>(p: string) => request<T>("GET", p),
   post: <T>(p: string, body?: unknown) => request<T>("POST", p, body ?? {}),
   patch: <T>(p: string, body: unknown) => request<T>("PATCH", p, body),
   del: <T>(p: string) => request<T>("DELETE", p),
+  upload,
 };
