@@ -303,7 +303,7 @@ function TaskRow({
       onClick={onClick}
       style={{ borderLeftColor: barColor }}
       className={cx(
-        "flex w-full items-center gap-3 border-l-4 px-4 py-2.5 text-left hover:bg-slate-50",
+        "flex w-full items-start gap-3 border-l-4 px-4 py-2.5 text-left hover:bg-slate-50",
         !first && "border-t border-slate-100",
       )}
     >
@@ -320,11 +320,11 @@ function TaskRow({
           <span className="text-xs text-slate-300">no review</span>
         )}
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
+      <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-slate-800">
         {task.name}
         {task.blocked ? <span className="ml-2 align-middle"><BlockedBadge /></span> : null}
       </span>
-      <span className={cx("shrink-0 text-xs", overdue ? "font-semibold text-rose-600" : "text-slate-400")}>
+      <span className={cx("shrink-0 pt-0.5 text-xs", overdue ? "font-semibold text-rose-600" : "text-slate-400")}>
         {task.due_date ? fmtDate(task.due_date) : ""}
         {overdue && " · overdue"}
       </span>
