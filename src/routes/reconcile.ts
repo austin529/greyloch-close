@@ -65,11 +65,26 @@ reconcileRoutes.post("/tasks/:id/reconcile", async (c) => {
   }
 
   const dates = parsed.lines.map((l) => toIso(l.date)).filter(Boolean).sort();
-  const bills = await fetchVendorBills(c.env, {
-    vendorLike: VENDOR_LIKE,
-    start: dates[0],
-    end: dates[dates.length - 1],
-  });
+  if (dates.length === 0) {
+    badRequest("Statement parsed, but no invoice dates were readable — can't scope the QuickBooks lookup.");
+  }
+
+  let bills;
+  try {
+    bills = await fetchVendorBills(c.env, {
+      vendorLike: VENDOR_LIKE,
+      start: dates[0],
+      end: dates[dates.length - 1],
+    });
+  } catch (err) {
+    // QuickBooks unreachable/slow: keep the parsed statement rather than losing
+    // the work, and let the user retry the match.
+    return c.json({
+      statement: statementSummary,
+      reconcile: null,
+      note: `Parsed the statement, but couldn't reach QuickBooks (${(err as Error).message}). Try the match again in a moment.`,
+    });
+  }
   const result = runReconcile(parsed.lines, bills);
 
   await logActivity(c.env.DB, {

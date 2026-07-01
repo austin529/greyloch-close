@@ -56,15 +56,18 @@ export function parseAhsStatement(text: string): ParsedStatement {
       monies.push(toNum(tokens[i]));
       i++;
     }
-    const desc: string[] = [];
-    while (i < tokens.length && !MONEY.test(tokens[i]) && !isRecordStart(tokens, i)) {
-      desc.push(tokens[i]);
+    // Everything up to the next record is description + a trailing running
+    // balance. Only the LAST money token is the balance, so a money-like value
+    // embedded in the description (e.g. "Restock fee 15.00") isn't mistaken for
+    // a column boundary.
+    const rest: string[] = [];
+    while (i < tokens.length && !isRecordStart(tokens, i)) {
+      rest.push(tokens[i]);
       i++;
     }
     let balance: number | null = null;
-    if (i < tokens.length && MONEY.test(tokens[i])) {
-      balance = toNum(tokens[i]);
-      i++;
+    if (rest.length && MONEY.test(rest[rest.length - 1])) {
+      balance = toNum(rest.pop()!);
     }
     lines.push({
       date,
@@ -72,7 +75,7 @@ export function parseAhsStatement(text: string): ParsedStatement {
       charges: monies[0] ?? 0,
       credits: monies[1] ?? 0,
       amountDue: monies[2] ?? 0,
-      description: desc.join(" ").slice(0, 60),
+      description: rest.join(" ").slice(0, 60),
       balance,
     });
   }

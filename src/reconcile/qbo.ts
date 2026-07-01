@@ -36,6 +36,8 @@ export async function fetchVendorBills(env: Env, opts: FetchOpts): Promise<QboBi
       parameters: { "@vendor": opts.vendorLike, "@start": opts.start, "@end": opts.end },
       parameterTypes: { "@vendor": "VARCHAR", "@start": "VARCHAR", "@end": "VARCHAR" },
     }),
+    // Don't let a stalled QuickBooks connector hang the Worker to its limit.
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) {
     throw new Error(`CData query failed (${res.status}): ${await res.text().catch(() => "")}`);
@@ -61,7 +63,9 @@ export async function fetchVendorBills(env: Env, opts: FetchOpts): Promise<QboBi
     bills.push({
       docNumber: String(doc),
       txnDate: date ? String(date).slice(0, 10) : "",
-      totalAmt: Number(amt) || 0,
+      // CData may return TotalAmt as a formatted string ("1,250.00"); strip
+      // separators/symbols so amounts over $999.99 don't collapse to 0.
+      totalAmt: Number(String(amt).replace(/[^0-9.-]/g, "")) || 0,
     });
   }
   return bills;
