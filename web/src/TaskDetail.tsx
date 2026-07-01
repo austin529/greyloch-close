@@ -45,6 +45,7 @@ export function TaskDetail({
   const [preparerId, setPreparerId] = useState<string>(task.preparer_id?.toString() ?? "");
   const [reviewerId, setReviewerId] = useState<string>(task.reviewer_id?.toString() ?? "");
   const [dueDate, setDueDate] = useState<string>(task.due_date ?? "");
+  const [reqReview, setReqReview] = useState<boolean>(task.requires_review === 1);
 
   useEffect(() => {
     api.get<Activity[]>(`/tasks/${task.id}/activity`).then(setActivity).catch(() => {});
@@ -66,10 +67,7 @@ export function TaskDetail({
   }
 
   const activeUsers = users.filter((u) => u.active);
-  const sodConflict =
-    task.requires_review === 1 &&
-    preparerId !== "" &&
-    preparerId === reviewerId;
+  const sodConflict = reqReview && preparerId !== "" && preparerId === reviewerId;
 
   return (
     <div className="fixed inset-0 z-30 flex justify-end">
@@ -193,14 +191,22 @@ export function TaskDetail({
                   </select>
                 </Field>
                 <Field label="Reviewer">
-                  <select className={inputCls} value={reviewerId} onChange={(e) => setReviewerId(e.target.value)}>
-                    <option value="">— unassigned —</option>
-                    {activeUsers.map((u) => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                  </select>
+                  {reqReview ? (
+                    <select className={inputCls} value={reviewerId} onChange={(e) => setReviewerId(e.target.value)}>
+                      <option value="">— unassigned —</option>
+                      {activeUsers.map((u) => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="px-2.5 py-1.5 text-sm text-slate-400">No reviewer required</div>
+                  )}
                 </Field>
               </div>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={reqReview} onChange={(e) => setReqReview(e.target.checked)} />
+                Requires a reviewer sign-off
+              </label>
               <Field label="Due date">
                 <input type="date" className={inputCls} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
               </Field>
@@ -216,7 +222,8 @@ export function TaskDetail({
                   run(() =>
                     api.patch(`/tasks/${task.id}`, {
                       preparer_id: preparerId ? Number(preparerId) : null,
-                      reviewer_id: reviewerId ? Number(reviewerId) : null,
+                      reviewer_id: reqReview && reviewerId ? Number(reviewerId) : null,
+                      requires_review: reqReview ? 1 : 0,
                       due_date: dueDate || null,
                       ...(sodConflict ? { override_sod: true } : {}),
                     }),

@@ -75,7 +75,7 @@ tasks.patch("/tasks/:id", async (c) => {
   requireOpenPeriod(period);
 
   const body = await readBody<Record<string, unknown>>(c);
-  const structuralKeys = ["preparer_id", "reviewer_id", "name", "category", "due_date"];
+  const structuralKeys = ["preparer_id", "reviewer_id", "name", "category", "due_date", "requires_review"];
   const wantsStructural = structuralKeys.some((k) => k in body);
   const wantsNotes = "notes" in body;
 
@@ -94,6 +94,7 @@ tasks.patch("/tasks/:id", async (c) => {
     category: "category" in body ? nullableStr(body.category) : task.category,
     preparer_id: "preparer_id" in body ? nullableId(body.preparer_id) : task.preparer_id,
     reviewer_id: "reviewer_id" in body ? nullableId(body.reviewer_id) : task.reviewer_id,
+    requires_review: "requires_review" in body ? (body.requires_review ? 1 : 0) : task.requires_review,
     due_date: "due_date" in body ? nullableStr(body.due_date) : task.due_date,
     notes: "notes" in body ? nullableStr(body.notes) : task.notes,
   };
@@ -102,7 +103,7 @@ tasks.patch("/tasks/:id", async (c) => {
   // Segregation of duties at assignment time. Admin may override explicitly.
   const overrideSod = body.override_sod === true && isAdmin(user);
   if (
-    task.requires_review === 1 &&
+    next.requires_review === 1 &&
     next.preparer_id != null &&
     next.reviewer_id != null &&
     next.preparer_id === next.reviewer_id &&
@@ -114,23 +115,38 @@ tasks.patch("/tasks/:id", async (c) => {
     );
   }
 
+  // Turning off the review requirement on an awaiting-review task completes it.
+  const newStatus: TaskStatus =
+    next.requires_review === 0 && task.status === "prepared" ? "completed" : task.status;
+
   const updated = await c.env.DB.prepare(
     `UPDATE tasks SET name = ?, category = ?, preparer_id = ?, reviewer_id = ?,
-            due_date = ?, notes = ? WHERE id = ? RETURNING *`,
+            requires_review = ?, due_date = ?, notes = ?, status = ? WHERE id = ? RETURNING *`,
   )
     .bind(
       next.name,
       next.category,
       next.preparer_id,
       next.reviewer_id,
+      next.requires_review,
       next.due_date,
       next.notes,
+      newStatus,
       id,
     )
     .first<Task>();
 
   // Audit the meaningful changes.
   await logChanges(c.env.DB, user, task, next, overrideSod);
+  if (task.requires_review !== next.requires_review) {
+    await logActivity(c.env.DB, {
+      task_id: id,
+      period_id: task.period_id,
+      user_id: user.id,
+      action: "edited",
+      detail: next.requires_review ? "Now requires a reviewer sign-off." : "No reviewer required.",
+    });
+  }
 
   const full = await taskWithNames(c.env.DB, id);
   return c.json(full ?? updated);
