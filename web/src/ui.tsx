@@ -48,6 +48,38 @@ export function StatusBadge({ status, size = "md" }: { status: TaskStatus; size?
   );
 }
 
+// Stable, distinct color per person (by user id) so a given name reads the
+// same everywhere. Avoids brand green (reserved for "completed").
+const PERSON_COLORS = [
+  "bg-violet-100 text-violet-700",
+  "bg-sky-100 text-sky-700",
+  "bg-amber-100 text-amber-800",
+  "bg-rose-100 text-rose-700",
+  "bg-fuchsia-100 text-fuchsia-700",
+  "bg-cyan-100 text-cyan-700",
+  "bg-indigo-100 text-indigo-700",
+  "bg-orange-100 text-orange-800",
+];
+export function personColorClasses(id: number | null): string {
+  if (id == null) return "bg-slate-100 text-slate-400";
+  return PERSON_COLORS[id % PERSON_COLORS.length];
+}
+
+/** Colored name chip for an assignee/reviewer. */
+export function PersonChip({ id, name }: { id: number | null; name: string | null }) {
+  if (!name) return <span className="text-xs text-slate-300">—</span>;
+  return (
+    <span
+      className={cx(
+        "inline-block max-w-full truncate rounded px-1.5 py-0.5 text-xs font-medium",
+        personColorClasses(id),
+      )}
+    >
+      {name}
+    </span>
+  );
+}
+
 export function BlockedBadge() {
   return (
     <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-300">

@@ -12,6 +12,7 @@ import {
   isOverdue,
   isTaskDone,
   perms,
+  PersonChip,
   ProgressBar,
   STATUS_META,
   StatusBadge,
@@ -238,8 +239,9 @@ export function Dashboard({
                     </span>
                   </div>
                   <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                    {items.map((t, i) => (
-                      <TaskRow key={t.id} task={t} me={me} first={i === 0} onClick={() => setOpenTask(t)} />
+                    <RowHeader />
+                    {items.map((t) => (
+                      <TaskRow key={t.id} task={t} me={me} first={false} onClick={() => setOpenTask(t)} />
                     ))}
                   </div>
                 </div>
@@ -247,8 +249,9 @@ export function Dashboard({
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-              {filtered.map((t, i) => (
-                <TaskRow key={t.id} task={t} me={me} first={i === 0} onClick={() => setOpenTask(t)} />
+              <RowHeader />
+              {filtered.map((t) => (
+                <TaskRow key={t.id} task={t} me={me} first={false} onClick={() => setOpenTask(t)} />
               ))}
             </div>
           )}
@@ -300,25 +303,46 @@ function TaskRow({
       onClick={onClick}
       style={{ borderLeftColor: barColor }}
       className={cx(
-        "flex w-full items-center gap-3 border-l-4 px-4 py-3 text-left hover:bg-slate-50",
+        "flex w-full items-center gap-3 border-l-4 px-4 py-2.5 text-left hover:bg-slate-50",
         !first && "border-t border-slate-100",
       )}
     >
       <span className="w-32 shrink-0">
         <StatusBadge status={task.status} />
       </span>
-      {task.blocked ? <BlockedBadge /> : null}
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-slate-800">{task.name}</div>
-        <div className="truncate text-xs text-slate-400">
-          {task.preparer_name ?? "unassigned"} → {task.requires_review ? task.reviewer_name ?? "unassigned" : "no review"}
-        </div>
-      </div>
-      <div className={cx("shrink-0 text-xs", overdue ? "font-semibold text-rose-600" : "text-slate-400")}>
+      <span className="hidden w-32 shrink-0 sm:block">
+        <PersonChip id={task.preparer_id} name={task.preparer_name} />
+      </span>
+      <span className="hidden w-32 shrink-0 sm:block">
+        {task.requires_review ? (
+          <PersonChip id={task.reviewer_id} name={task.reviewer_name} />
+        ) : (
+          <span className="text-xs text-slate-300">no review</span>
+        )}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
+        {task.name}
+        {task.blocked ? <span className="ml-2 align-middle"><BlockedBadge /></span> : null}
+      </span>
+      <span className={cx("shrink-0 text-xs", overdue ? "font-semibold text-rose-600" : "text-slate-400")}>
         {task.due_date ? fmtDate(task.due_date) : ""}
         {overdue && " · overdue"}
-      </div>
+      </span>
     </button>
+  );
+}
+
+// Column header aligned with TaskRow (border-l-4 transparent matches the row's
+// colored status bar so columns line up).
+function RowHeader() {
+  return (
+    <div className="flex items-center gap-3 border-l-4 border-transparent border-b border-slate-200 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+      <span className="w-32 shrink-0">Status</span>
+      <span className="hidden w-32 shrink-0 sm:block">Preparer</span>
+      <span className="hidden w-32 shrink-0 sm:block">Reviewer</span>
+      <span className="min-w-0 flex-1">Task</span>
+      <span className="shrink-0">Due</span>
+    </div>
   );
 }
 
