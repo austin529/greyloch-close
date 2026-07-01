@@ -67,8 +67,19 @@ async function overdueDigest(env: Env): Promise<void> {
 
 export default {
   fetch: app.fetch,
-  // Cron-triggered (see wrangler.jsonc triggers.crons).
+  // Cron-triggered (see wrangler.jsonc triggers.crons). Never let a failure
+  // vanish silently — a dead reminder is a real operational risk, so log it
+  // (observability is enabled) and try to post a heads-up to Teams.
   scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(overdueDigest(env));
+    ctx.waitUntil(
+      overdueDigest(env).catch(async (err) => {
+        console.error("overdue digest failed:", err);
+        await notify(env, {
+          title: "Overdue digest failed to run",
+          text: `The daily close reminder errored: ${(err as Error).message}`,
+          level: "attention",
+        }).catch(() => {});
+      }),
+    );
   },
 };

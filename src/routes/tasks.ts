@@ -115,6 +115,8 @@ tasks.patch("/tasks/:id", async (c) => {
     );
   }
 
+  // A no-review task never carries a reviewer (enforced server-side).
+  const reviewerId = next.requires_review === 0 ? null : next.reviewer_id;
   // Turning off the review requirement on an awaiting-review task completes it.
   const newStatus: TaskStatus =
     next.requires_review === 0 && task.status === "prepared" ? "completed" : task.status;
@@ -127,7 +129,7 @@ tasks.patch("/tasks/:id", async (c) => {
       next.name,
       next.category,
       next.preparer_id,
-      next.reviewer_id,
+      reviewerId,
       next.requires_review,
       next.due_date,
       next.notes,
@@ -137,7 +139,7 @@ tasks.patch("/tasks/:id", async (c) => {
     .first<Task>();
 
   // Audit the meaningful changes.
-  await logChanges(c.env.DB, user, task, next, overrideSod);
+  await logChanges(c.env.DB, user, task, { ...next, reviewer_id: reviewerId }, overrideSod);
   if (task.requires_review !== next.requires_review) {
     await logActivity(c.env.DB, {
       task_id: id,
@@ -145,6 +147,18 @@ tasks.patch("/tasks/:id", async (c) => {
       user_id: user.id,
       action: "edited",
       detail: next.requires_review ? "Now requires a reviewer sign-off." : "No reviewer required.",
+    });
+  }
+  // If dropping the review requirement auto-completed the task, record an
+  // explicit status change so the audit trail shows who completed it (and that
+  // there was no reviewer sign-off).
+  if (newStatus !== task.status) {
+    await logActivity(c.env.DB, {
+      task_id: id,
+      period_id: task.period_id,
+      user_id: user.id,
+      action: "status_change",
+      detail: `${task.status} -> ${newStatus} (review requirement removed by ${user.name})`,
     });
   }
 

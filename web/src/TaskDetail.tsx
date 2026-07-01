@@ -69,9 +69,15 @@ export function TaskDetail({
   const activeUsers = users.filter((u) => u.active);
   const sodConflict = reqReview && preparerId !== "" && preparerId === reviewerId;
 
+  // Don't silently lose note edits when the drawer is dismissed.
+  function handleClose() {
+    if (notes !== (task.notes ?? "") && !confirm("Discard unsaved notes?")) return;
+    onClose();
+  }
+
   return (
     <div className="fixed inset-0 z-30 flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/30" onClick={handleClose} />
       <div className="relative flex h-full w-full max-w-xl flex-col bg-white shadow-2xl">
         {/* header */}
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
@@ -88,7 +94,7 @@ export function TaskDetail({
             </div>
             <h2 className="text-lg font-semibold leading-tight text-slate-900">{task.name}</h2>
           </div>
-          <Button variant="ghost" onClick={onClose} aria-label="Close">
+          <Button variant="ghost" onClick={handleClose} aria-label="Close">
             ✕
           </Button>
         </div>

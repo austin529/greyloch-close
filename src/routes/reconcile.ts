@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { extractText, getDocumentProxy } from "unpdf";
-import { getTask, logActivity } from "../db";
+import { getPeriod, getTask, logActivity } from "../db";
 import { parseAhsStatement } from "../reconcile/parse";
 import { reconcile as runReconcile } from "../reconcile/match";
 import { fetchVendorBills, qboConfigured } from "../reconcile/qbo";
 import type { AppContext } from "../types";
-import { badRequest, forbidden, isAdmin, isPreparer, isReviewer, notFound, parseId, requireWriter } from "../util";
+import { badRequest, forbidden, isAdmin, isPreparer, isReviewer, notFound, parseId, requireOpenPeriod, requireWriter } from "../util";
 
 export const reconcileRoutes = new Hono<AppContext>();
 
@@ -28,6 +28,8 @@ reconcileRoutes.post("/tasks/:id/reconcile", async (c) => {
   if (!isAdmin(user) && !isPreparer(user, task) && !isReviewer(user, task)) {
     forbidden("Only the assigned preparer/reviewer or an admin can reconcile this task.");
   }
+  // Closed periods are read-only (matches every other task mutation).
+  requireOpenPeriod(await getPeriod(c.env.DB, task.period_id));
 
   const form = await c.req.formData().catch(() => null);
   const file = form?.get("file");

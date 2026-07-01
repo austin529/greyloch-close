@@ -226,6 +226,8 @@ export function Dashboard({
 
           {/* task list — grouped by category, or one day-ordered list when the
               checklist has no categories (as with the Monday-sourced list) */}
+          {loading && <p className="text-xs text-slate-400">Loading tasks…</p>}
+          <div className={cx(loading && "pointer-events-none opacity-50 transition-opacity")}>
           {filtered.length === 0 ? (
             <p className="text-sm text-slate-400">No tasks match this filter.</p>
           ) : hasCategories ? (
@@ -255,6 +257,7 @@ export function Dashboard({
               ))}
             </div>
           )}
+          </div>
         </>
       )}
 
